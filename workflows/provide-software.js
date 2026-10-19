@@ -148,11 +148,12 @@ const CONFIG = {
     runs: { type: 'boolean', description: 'the software starts or the service unit is valid in the built result (e.g. nix develop -c <tool> --version, or the unit in the built system)' },
     closureDiff: { type: 'string' },
     rollback: { type: 'string' },
+    changeKind: { type: 'string', enum: ['standard', 'normal', 'emergency', 'destructive'], description: 'per the change-management skill and the project profile; destructive if it can delete or replace data, e.g. a new data path or a reformatted volume' },
     needsOwner: { type: 'boolean', description: 'the project profile requires the host owner\'s approval for this change' },
     failing: { type: 'array', items: { type: 'string' } },
     notes: { type: 'array', items: { type: 'string' } },
   },
-  required: ['branch', 'files', 'built', 'runs', 'rollback', 'needsOwner', 'failing'],
+  required: ['branch', 'files', 'built', 'runs', 'rollback', 'changeKind', 'needsOwner', 'failing'],
 }
 const CHECK = { type: 'object', properties: { pass: { type: 'boolean' }, problems: { type: 'array', items: { type: 'string' } }, notes: { type: 'array', items: { type: 'string' } } }, required: ['pass', 'problems'] }
 const APPLY = { type: 'object', properties: { applied: { type: 'boolean' }, generation: { type: 'string' }, output: { type: 'string' }, rolledBack: { type: 'boolean' }, failing: { type: 'array', items: { type: 'string' } }, notes: { type: 'array', items: { type: 'string' } } }, required: ['applied', 'rolledBack', 'failing'] }
@@ -188,7 +189,7 @@ const layer = chosenScope === 'project'
     ? 'the person\'s Home Manager configuration (home.packages or programs.*), or users.users.<name>.packages if the host has no Home Manager'
     : 'the module for its concern in the host\'s NixOS configuration (the module\'s options, or environment.systemPackages for a plain tool)'
 const configBrief = (extra) =>
-  `${ONBOARD} Follow the it-support skills nixos-administration and change-management. ${where} Need: ${need}. Chosen: ${found.choice}. Candidates: ${JSON.stringify(found.candidates)}. Write the change in ${layer}. ${found.unfree ? 'It is unfree: allow exactly these packages with allowUnfreePredicate (or the project\'s existing unfree setting), not a blanket allowUnfree unless the configuration already uses one. ' : ''}Keep it minimal and pinned by the existing lock; never install imperatively. Commit with a Conventional Commit, then build without activating (nixos-rebuild build and nix store diff-closures against /run/current-system for system scope; home-manager build for user scope; nix develop -c <tool> --version for project scope; the platform's dry run elsewhere), and check the software runs or the unit is valid in the built result. Name the rollback, and whether the project profile requires the owner's approval to apply it.${extra} ` + NOTES_RULE
+  `${ONBOARD} Follow the it-support skills nixos-administration and change-management. ${where} Need: ${need}. Chosen: ${found.choice}. Candidates: ${JSON.stringify(found.candidates)}. Write the change in ${layer}. ${found.unfree ? 'It is unfree: allow exactly these packages with allowUnfreePredicate (or the project\'s existing unfree setting), not a blanket allowUnfree unless the configuration already uses one. ' : ''}Keep it minimal and pinned by the existing lock; never install imperatively. Commit with a Conventional Commit, then build without activating (nixos-rebuild build and nix store diff-closures against /run/current-system for system scope; home-manager build for user scope; nix develop -c <tool> --version for project scope; the platform's dry run elsewhere), and check the software runs or the unit is valid in the built result. Name the rollback, classify the change kind (standard, normal, emergency, destructive) per change-management and the project profile, and say whether the profile requires the owner's approval to apply it.${extra} ` + NOTES_RULE
 let config = await agent(configBrief(''), { schema: CONFIG, phase: 'Configure', label: 'configure' })
 if (!config) return { status: 'blocked', reason: 'configure step returned nothing' }
 strings(config.notes).forEach((n) => notes.push('configure: ' + n))
@@ -217,10 +218,18 @@ if (strings(check.problems).length || !check.pass) {
 phase('Apply')
 let applied = null
 if (chosenScope !== 'project') {
-  if (!apply || config.needsOwner) {
+  const holdReason = !apply
+    ? 'apply was not set'
+    : config.changeKind === 'destructive'
+      ? 'the change is destructive and needs the host owner\'s explicit word and a verified backup'
+      : config.needsOwner
+        ? 'the project profile requires the host owner\'s approval for this change'
+        : ''
+  if (holdReason) {
     return {
       status: 'awaiting-approval',
-      reason: !apply ? 'apply was not set' : 'the project profile requires the host owner\'s approval for this change',
+      reason: holdReason,
+      changeKind: config.changeKind,
       choice: found.choice,
       scope: chosenScope,
       branch: config.branch,

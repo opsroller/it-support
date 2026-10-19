@@ -14,6 +14,16 @@
 The plugin starts the server from nixpkgs at run time; nothing from it is
 copied into this repository.
 
+## Which version runs
+
+`nixpkgs#mcp-nixos` resolves `nixpkgs` through the flake registry of the
+machine running the agent, so the registry entry decides the server's
+version. On NixOS hosts configured from a flake, the registry usually
+points at the system's own pinned nixpkgs, so the server matches the
+system. To pin it explicitly, set the registry entry in the host's
+configuration (`nix.registry.nixpkgs.flake = inputs.nixpkgs;`), or check
+with `nix registry list` which revision it follows.
+
 ## Tools
 
 | Tool | Arguments | Returns |

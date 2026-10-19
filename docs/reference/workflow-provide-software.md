@@ -32,9 +32,9 @@ Missing `need`, or a `scope` other than the three, returns the usage string.
 | Phase | Agents | Edits files | Does |
 |---|---|---|---|
 | Search | 1 | no | Channel the host follows; packages, module options, Home Manager options, licence, cache status, versions; every query recorded. Returns `not-packaged` if nothing provides it |
-| Configure | 1 | yes (branch) | The change at the chosen layer, unfree allowed by name, committed and built; the software runs in the built result |
+| Configure | 1 | yes (branch) | The change at the chosen layer, unfree allowed by name, committed and built; the software runs in the built result; change kind classified |
 | Check | 1-3, independent | no; one revision edits | Independent read-only review: searches enough, existing module used, right layer, declarative, rollback real; one revision and re-check |
-| Apply | 0-1 | host | System or user scope, only when `apply` is `true` and the profile does not require the owner: test, check, switch; rolls back on failure. Project scope needs no apply |
+| Apply | 0-1 | host | System or user scope, only when `apply` is `true`, the change is not destructive and the profile does not require the owner: test, check, switch; rolls back on failure. Project scope needs no apply |
 | Docs | 2 (one independent) | yes | Reference and how-to pages; an independent read-only docs check |
 | Hand off | 1 | no (pushes) | Pushes; updates or opens a draft `feat:` PR. Does not mark it ready or merge |
 

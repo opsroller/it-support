@@ -1,0 +1,25 @@
+{
+  "name": "it-support",
+  "version": "0.1.0",
+  "description": "IT support and systems administration role: answers support requests by triage, diagnosis and a reversible fix; administers operating systems, NixOS first (declarative configuration, flakes, generations and rollback) and other Linux distributions and macOS too; searches nixpkgs first through the bundled nixos MCP server (mcp-nixos from nixpkgs); runs NVIDIA drivers and CUDA, and libvirt/KVM virtual machines with virsh; and treats every change as reviewed, tested, reversible and documented.",
+  "author": {
+    "name": "opsroller"
+  },
+  "repository": "https://github.com/opsroller/it-support",
+  "license": "GPL-2.0-or-later",
+  "keywords": [
+    "role",
+    "job-function",
+    "it-support",
+    "help-desk",
+    "sysadmin",
+    "nixos",
+    "nixpkgs",
+    "linux",
+    "nvidia",
+    "cuda",
+    "libvirt",
+    "kvm",
+    "virtualization"
+  ]
+}
